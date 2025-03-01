@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.function.Supplier;
 
 @RestController
 @RequestMapping("/client")
@@ -18,9 +19,20 @@ public class ClientController {
 
     @GetMapping("/time")
     public ResponseEntity<String> getCurrentTime() {
-        LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(System.currentTimeMillis()), ZoneId.systemDefault());
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String formattedDateTime = dateTime.format(formatter);
-        return ResponseEntity.ok(formattedDateTime);
+        return runWithDelay(() -> {
+            LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(System.currentTimeMillis()), ZoneId.systemDefault());
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String formattedDateTime = dateTime.format(formatter);
+            return ResponseEntity.ok(formattedDateTime);
+        });
+    }
+
+    private <T> T runWithDelay(Supplier<T> supplier) {
+        try {
+            Thread.sleep(2500L);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return supplier.get();
     }
 }
